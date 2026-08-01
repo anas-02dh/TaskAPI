@@ -1,0 +1,44 @@
+services:
+
+  postgres:
+    image: postgres:17
+
+    container_name: todo-postgres
+
+    restart: always
+
+    environment:
+      POSTGRES_DB: tasks_db
+      POSTGRES_USER: anas
+      POSTGRES_PASSWORD: psql2002
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  api:
+    build: .
+
+    container_name: todo-api
+
+    restart: always
+
+    depends_on:
+      - postgres
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: tasks_db
+      DB_USER: anas
+      DB_PASSWORD: psql2002
+
+volumes:
+  postgres-data:
