@@ -187,11 +187,195 @@ src/
 └── app.js
 ```
 
-## Summary
+## A3 containerization with docker
 
-- Replaced the mock data array with PostgreSQL.
-- Used the `pg` library for database access.
-- Stored database credentials in a `.env` file.
-- Updated the Repository layer to execute SQL queries.
-- Updated the Service and Controller layers to use `async/await`.
-- Kept the same REST API endpoints and layered architecture.
+# Dockerizing the Application
+
+This project can be containerized using **Docker** and **Docker Compose**, allowing the Express API and PostgreSQL database to run in isolated containers.
+
+## Prerequisites
+
+- Docker
+- Docker Compose
+
+Verify the installation:
+
+```bash
+docker --version
+docker compose version
+```
+
+---
+
+## Project Structure
+
+```text
+.
+├── docker/
+│   └── init.sql
+├── src/
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
+├── package.json
+└── README.md
+```
+
+---
+
+## Dockerfile
+
+The application is built using the official Node.js Alpine image.
+
+```dockerfile
+FROM node:22-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+```
+
+---
+
+## .dockerignore
+
+```text
+node_modules
+.git
+.env
+README.md
+```
+
+---
+
+## Database Initialization
+
+The `docker/init.sql` script automatically creates the `tasks` table and inserts sample data when the PostgreSQL container starts for the first time.
+
+---
+
+## Docker Compose
+
+Build the Docker images:
+
+```bash
+docker compose build
+```
+
+Start the containers:
+
+```bash
+docker compose up
+```
+
+Run in detached mode:
+
+```bash
+docker compose up -d
+```
+
+Stop the containers:
+
+```bash
+docker compose down
+```
+
+Remove containers and database volume:
+
+```bash
+docker compose down -v
+```
+
+---
+
+## Verify Running Containers
+
+```bash
+docker ps
+```
+
+Example:
+
+```text
+CONTAINER ID   IMAGE            NAME
+xxxxxxxxxxxx   postgres:17      todo-postgres
+xxxxxxxxxxxx   crud-api         todo-api
+```
+
+---
+
+## Access the API
+
+API:
+
+```
+http://localhost:3000/tasks
+```
+
+Swagger UI:
+
+```
+http://localhost:3000/api-docs
+```
+
+---
+
+## View Logs
+
+API logs:
+
+```bash
+docker compose logs api
+```
+
+Database logs:
+
+```bash
+docker compose logs postgres
+```
+
+Follow logs in real time:
+
+```bash
+docker compose logs -f
+```
+
+---
+
+## Connect to PostgreSQL Container
+
+```bash
+docker exec -it todo-postgres psql -U postgres -d tasks_db
+```
+
+Example query:
+
+```sql
+SELECT * FROM tasks;
+```
+
+---
+
+## Architecture
+
+```text
+                Docker Compose
+                       │
+      ┌────────────────┴────────────────┐
+      │                                 │
+      ▼                                 ▼
+┌──────────────────┐            ┌──────────────────┐
+│ Express API      │──────────▶ │ PostgreSQL       │
+│ Node.js          │            │ tasks_db         │
+│ Port 3000        │            │ Port 5432        │
+└──────────────────┘            └──────────────────┘
+```
+
